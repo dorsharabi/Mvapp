@@ -1,0 +1,120 @@
+<h2 class="page-header">Dashboar</h2>
+<p id="pId"><h4>Welcome to your dashboard {{user.name}}</h4></p>
+<p>The movies you have allready ordered are: <p id="movie-list"></p></p>
+<div class="raw">
+	<input id="mvName" type="text">
+	<button id="search" onClick="searchFormMovie()">Search</button>
+	<div id="movieData"></div>
+	<button id="order" onClick="orderFormMovie()">Order</button>
+</div>
+
+
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script>
+	$("#order").hide();
+	var movieObj;
+	getAllOrders();
+	
+	function getAllOrders()
+	{
+		console.log("userName = " + '{{user.name}}');
+		var promise = $.get('/movie/getAllOrders/{{user.name}}' );
+		promise.then(function(data){
+		  //we have our result here
+		  var mvl = data;
+		  console.log(mvl); //return a promise here again
+		  appendToPtag(mvl.toString(),'#movie-list');
+		});
+	};
+	function appendToPtag(txt,id)
+	{
+		$(id).text(txt);
+	}
+	var input = document.getElementById("mvName"); 
+	// Execute a function when the user releases a key on the keyboard
+	input.addEventListener("keyup",  function(event) {
+		// Cancel the default action, if needed
+	event.preventDefault();
+		// Number 13 is the "Enter" key on the keyboard
+	if (event.keyCode ===  13) {
+		// Trigger the button element with a click
+			searchFormMovie();
+	   }
+	}); 
+	
+	//dashboad Scripts
+	function getData(userName,txt)
+	{
+		//alert('this user is: ' + userName + ' text val: ' + $("#pId").text());
+		//$("#pId").text("from now this is the text");
+		var promise = $.get('/users/userTest/' + userName);
+		promise.then(function(data){
+		  //we have our result here
+		  var tmp = data;
+		  console.log(tmp.user); //return a promise here again
+		});
+	}
+	
+	function generatHtml(title, year, genre, length){
+		return "<label> Title: " + title + "</label></br>" + 
+		"<label> Year: " + year + "</label></br>" + 
+		"<label> Genre: " + genre + "</label></br>" + 
+		"<label> Length: " + length + "</label></br>";
+	}
+	
+	function searchFormMovie()
+	{
+		var name = $("#mvName").val();
+		var path = 'http://www.omdbapi.com/?i=tt3896198&apikey=7c20c369&t=' + name + '/';
+		console.log(path);
+		
+		var jqxhr = $.get( path, function(data) {
+			var html = generatHtml(data.Title, data.Year, data.Genre, data.Runtime);
+			$( "#movieData" ).empty().append(html);
+			$("#order").show();
+			movieObj = {uName:'{{user.name}}',title:data.Title,year:data.Year,genre:data.Genre,length:data.Runtime};
+
+		})
+		.fail(function(e) {
+			$("#order").hide();
+			alert( "error" + e );
+		})
+		  
+
+		
+		/*
+		var promise = $.get('http://www.omdbapi.com/?t=' + name);
+		promise.then(function(data){
+		  //we have our result here
+		  var tmp = data;
+		console.log(tmp); //return a promise here again
+		});	
+		*/
+	}
+	
+	function orderFormMovie(){
+		console.log(movieObj);
+		$.post("/movie/orderMovie", movieObj, function(d){
+		   console.log(d);
+
+		}).fail(function(e){
+			console.log(e);
+		})
+    	location.reload();
+
+	}
+	
+	
+	//http://www.omdbapi.com/?t=titanic
+	
+	
+	
+	
+</script>
+
+
+
+
+
+
+
